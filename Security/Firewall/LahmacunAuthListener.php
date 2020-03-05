@@ -4,7 +4,8 @@ namespace App\Lahmacun\AuthSDK\Security\Firewall;
 
 use App\Lahmacun\AuthSDK\Security\Authentication\Token\LahmacunAuthToken;
 use App\Lahmacun\AuthSDK\Security\User\LahmacunAuthUser;
-use App\Lahmacun\AuthSDK\Service\TokenChecker;
+use App\Lahmacun\AuthSDK\Service\JWTParser;
+use App\Lahmacun\AuthSDK\Service\TokenService;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -29,19 +30,18 @@ class LahmacunAuthListener{
 		}
 
 		$jwt = substr($request->headers->get('Authorization'), 7);
+		$jsonPayload = JWTParser::decode($jwt);
 
-		$tokenChecker = new TokenChecker();
-		$isTokenValid = $tokenChecker->check($jwt);
+		$tokenService = new TokenService();
+		$isTokenValid = $tokenService->check($jwt);
 
 		if (!$isTokenValid) {
 			return;
 		}
 
 		$user = new LahmacunAuthUser();
-		$user->setUsername('zahidefe');
-
-		// TODO: Send Request To Authentication Server
-		// TODO: Create user from auth server response
+		$user->setUsername($jsonPayload['username']);
+		$user->setRoles($jsonPayload['roles']);
 
 		$token = new LahmacunAuthToken();
 		$token->setUser($user);
